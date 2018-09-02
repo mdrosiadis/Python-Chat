@@ -2,6 +2,12 @@ import socket
 import pyautogui
 import json
 from threading import Thread
+from tkinter import *
+
+def window():
+	root =Tk().mainloop()
+
+Thread(target = window).start()
 
 def checkData(data):
 
