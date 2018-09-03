@@ -37,6 +37,8 @@ class Chat():
 	def send(self):
 		txt = self.responseEntry.get()
 		self.responseEntry.delete(0, END)
+		if txt = '' :
+			return
 		self.master.client.send(bytes('DACHAT' + str(json.dumps({'type' : 'chat', 'target' : self.nickname, 'message' : txt})),'utf-8'))
 		self.textBox.config(state = NORMAL)
 		self.textBox.insert(INSERT, 'Me: ' + txt + '\n')
