@@ -6,6 +6,7 @@ server_ip = 'localhost'
 server_port = 9999
 
 accounts = [{'username': 'mike', 'password' : 'mike', 'nickname' : 'Mike'}, 
+            {'username': 'lukas', 'password' : 'lukas', 'nickname' : 'Lukas'},
             {'username': 'john', 'password' : '1234', 'nickname' : 'John'}]
 
 
@@ -51,10 +52,24 @@ def handle_client(client_socket):
             found = True
             
             if data['password'] == account['password']:
+                for client in activeClients:
+                    if account['nickname'] == client['nickname']:
+                        client_socket.send(bytes("DACHAT" + str(json.dumps({'response' : 'rejected', 'error' : 'User already connected!'})),'utf-8'))
+                        return
+
                 client_socket.send(bytes("DACHAT" + str(json.dumps({'response' : 'connected', 'nickname' : account['nickname']})),'utf-8'))
+                members = ''
+                for client in activeClients:
+                    client['socket'].send(bytes("DACHAT" + str(json.dumps({'response' : 'newnick', 'nickname' : account['nickname']})),'utf-8'))
+                    members = members + client['nickname'] + '#'
                 activeClients.append({'socket' : client_socket, 'nickname' : account['nickname']})
+                if len(members) != 0 :
+                    members = members[:-1]
+                    client_socket.send(bytes("DACHAT" + str(json.dumps({'response' : 'newnick', 'nickname' : members})),'utf-8'))
                 connectedClient(client_socket, account['nickname'])
                 #client_socket.send(bytes("Succesfully Connected as " + account['nickname'],'utf-8'))
+                
+
             else:
                 client_socket.send(bytes("DACHAT" + str(json.dumps({'response' : 'rejected', 'error' : 'Wrong Password'})),'utf-8'))
                 #client_socket.send(bytes("Wrong Password!",'utf-8')
