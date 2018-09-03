@@ -5,9 +5,7 @@ from threading import Thread
 from tkinter import *
 import tkinter.scrolledtext as tkst
 import tkinter.ttk as ttk
-#import GUI
 
-#app = DACHAT()
 
 def checkData(data):
 
@@ -84,11 +82,6 @@ try:
 
 	print(response)
 
-	'''toSend = 'DACHAT' + str(json.dumps({'type' : 'send', 'target' : 'john', 'message' : 'KALHSPERA'}))
-
-	print(toSend)
-
-	client.send(bytes(toSend,'utf-8'))'''
 
 	print('Send messages with formtat: <nickname> -> <message> , or QUIT to quit')
 

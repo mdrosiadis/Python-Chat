@@ -24,18 +24,6 @@ def handle_client(client_socket):
 
     request = client_socket.recv(1024)
 
-    '''print('$- Received: ', request)
-
-    requeststring = str(request,'utf-8')
-
-    if requeststring[:6] != 'DACHAT':
-        print('$- Denied request: ' , requeststring)
-        client_socket.close()
-        return
-
-    requeststring = requeststring[6:]
-
-    data = json.loads(requeststring)'''
 
     data = checkData(request)
 

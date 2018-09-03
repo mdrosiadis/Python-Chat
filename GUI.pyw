@@ -190,10 +190,4 @@ class DACHAT:
 		self.root.destroy()
 
 
-
-
-
 app = DACHAT()
-
-
-

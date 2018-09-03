@@ -191,9 +191,4 @@ class DACHAT:
 
 
 
-
-
 app = DACHAT()
-
-
-
