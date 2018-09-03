@@ -1,63 +1,180 @@
 from tkinter import *
+import tkinter.scrolledtext as tkst
+import tkinter.ttk as ttk
+import socket
+import json
+from threading import Thread
+from tkinter import messagebox
 
+def checkData(data):
+
+    data = str(data,'utf-8')
+
+    if data[:6] != 'DACHAT':
+        #print('$- Denied request: ' , data)
+        return None
+
+    #print('$- Received: ', data)
+
+    data = data[6:]
+
+    data = json.loads(data)
+
+    return data
+'''
 def login(r):
-	global frame2
+	global nb
+	global userEntry
+	global passEntry
 
-	print('imhere')
-	frame2.tkraise()
-
-
-def refresh(event):
-	global loginScreen
-	global frame2
-
-
-	#loginScreen.grid(row=0, column=0, sticky="nsew")
-	#frame2.grid(row=0, column=0, sticky="nsew")
-
-	if event :
-		if event.width < 200 or event.height < 250 :
-			return
-		loginScreen.place(x = event.width/2 - 100, y = event.height/2 - 100 )
-		frame2.place(x = event.width/2 - 100, y = event.height/2 - 100 )
-	else :
-		loginScreen.grid(row=0, column=0, sticky="nsew")
-		frame2.grid(row=0, column=0, sticky="nsew")
+	username = userEntry.get()
+	password = passEntry.get()
+	print(username, ' ', password)
+	nb.grid(row = 0 , column = 0, sticky = 'NSEW')
+'''
+def hi():
+	print('hi')
 
 
-root = Tk()
-root.title('DaChat!')
-root.geometry('200x400')
+class Chat():
 
-loginScreen  = Frame(root)
+	def __init__(self, master, notebook, nick):
+		self.master = master
+		self.frame = ttk.Frame(notebook)
+		self.nickname = nick
+		self.textBox = tkst.ScrolledText(self.frame, wrap = WORD, height = 19, width = 34)
+		self.textBox.config(state = DISABLED)
+		self.textBox.pack()	
+		self.responseEntry = Entry(self.frame)
+		self.responseEntry.pack()
+		self.sendButton = Button(self.frame, text = 'Send', command = self.send)
+		self.sendButton.pack()
 
-loginLabel = Label(loginScreen, text = 'Login', font = ('Times', 30))
-loginLabel.grid(column = 1)
+	def send(self):
+		txt = self.responseEntry.get()
+		#self.responseEntry.set(text = '')
+		self.master.client.send(bytes('DACHAT' + str(json.dumps({'type' : 'chat', 'target' : self.nickname, 'message' : txt})),'utf-8'))
+		self.textBox.config(state = NORMAL)
+		self.textBox.insert(INSERT, 'Me: ' + txt + '\n')
+		self.textBox.config(state = DISABLED)
 
-userLabel = Label(loginScreen, text = 'Username')
-userLabel.grid(row =1, column = 0)
+class LoginScreen():
 
-passLabel = Label(loginScreen, text = 'Password')
-passLabel.grid(row = 2,column = 0)
+	def __init__(self, master):
 
-userEntry = Entry(loginScreen)
-userEntry.grid(row = 1, column = 1)
+		self.master = master
 
-passEntry = Entry(loginScreen)
-passEntry.grid(row = 2, column = 1)
+		frame = Frame(master.root)
+		
+		self.loginLabel = Label(frame, text = 'Login', font = ('Times', 30))
+		self.loginLabel.grid(column = 1)
 
-loginButton = Button(loginScreen, text = 'Login', command = lambda: login(root))
-loginButton.grid(row = 3, column = 1)
+		self.userLabel = Label(frame, text = 'Username')
+		self.userLabel.grid(row =1, column = 0)
 
-#loginScreen.pack()
+		self.passLabel = Label(frame, text = 'Password')
+		self.passLabel.grid(row = 2,column = 0)
 
-frame2 = Frame(root)
-l = Label(frame2, text = 'Logged in!').pack()
+		self.userEntry = Entry(frame)
+		self.userEntry.grid(row = 1, column = 1)
 
-refresh(None)
-loginScreen.tkraise()
+		self.passEntry = Entry(frame, show = '*')
+		self.passEntry.grid(row = 2, column = 1)
 
-root.bind("<Configure>", refresh)
+		self.loginButton = Button(frame, text = 'Login', command = self.login)
+		self.loginButton.grid(row = 3, column = 1)
+
+		frame.place(x = 50, y =  100)
+
+	def login(self):
+		print('LOGGED IN!')
+
+		target_host = "localhost"
+		target_port = 9999
+
+		self.master.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.master.client.connect((target_host,target_port))
+		
+		data  = str(json.dumps({'username' : self.userEntry.get(), 'password' : self.passEntry.get()}))
+
+		data = bytes('DACHAT'+data, 'utf-8')	
+
+		self.master.client.send(data)
+		response = self.master.client.recv(4096)
+	
+		#response = str(response, 'utf-8')
+		response = checkData(response)
+
+		if response['response'] == 'connected':
+			self.master.myNickname = response['nickname']
+			print('Succesfully Connected as ' + self.master.myNickname + '!')
+			self.master.mainscreen = MainWindow(self.master)
+			#Thread(target = listenLoop, args = (client,)).start()
+		elif response['response'] == 'rejected' :
+			print(response['error'])
+			print('Client Closed conetion!')
+			messagebox.showwarning('DaChat!', response['error'])
+			self.master.client.close()
+		
+
+		print(response)
+		
 
 
-root.mainloop()
+		
+
+
+class MainWindow():
+
+	def __init__(self, master):
+		
+		self.master = master
+		frame = Frame(master.root)
+		self.nb = ttk.Notebook(frame)
+		self.nb.pack()
+		txt = 'Logged in as ' + self.master.myNickname
+		self.me = Label(frame, text = txt)
+		self.me.pack(side = LEFT)
+
+		for name in ('Mike', 'John', 'Lukas'):
+			c = Chat(self.master, self.nb, name)
+			self.nb.add(c.frame, text = c.nickname)
+
+		frame.pack()
+
+class DACHAT:
+
+	def __init__(self):
+		self.root = Tk()
+		self.root.title('DaChat!')
+		self.root.geometry('300x400')
+		self.root.resizable(0, 0)
+		#mainscreen = MainWindow(self)
+		logscreen = LoginScreen(self)
+		self.root.mainloop()
+
+
+
+
+
+app = DACHAT()
+
+
+
+
+'''
+nb = ttk.Notebook(root)
+#nb.grid(row = 0 , column = 0, sticky = 'NSEW')
+tab1 = Chat(nb, 'mike')
+tab2 = Chat(nb, 'john')
+
+nb.add(tab1.frame, text = tab1.nickname)
+nb.add(tab2.frame, text = tab2.nickname)
+
+#loginScreen.tkraise()
+#lol = Chat(root, 'mike')
+
+#root.bind("<Configure>", refresh)
+'''
+
+

@@ -3,57 +3,11 @@ import pyautogui
 import json
 from threading import Thread
 from tkinter import *
+import tkinter.scrolledtext as tkst
+import tkinter.ttk as ttk
+#import GUI
 
-logged = False
-
-def f():
-	print('hello')
-	global logged
-
-	logged = not logged
-	window()
-	
-root = Tk()
-root.title('DaChat!')
-window()
-
-def window():
-
-
-
-	
-
-	
-	print(logged)
-
-	if not logged : 
-
-		welcome = Label(root, text = 'Login')
-		welcome.grid(column = 1)
-
-		userLabel = Label(root, text = 'Username')
-		userLabel.grid(row = 1, sticky = E)
-
-		passLabel = Label(root, text = 'Password')
-		passLabel.grid(row = 2, sticky = E)
-
-		usernameBox = Entry(root)
-		usernameBox.grid(row = 1, column = 1)
-
-		passwordBox = Entry(root)
-		passwordBox.grid(row = 2, column = 1)
-	else :
-		welcome = Label(root, text = 'Suck Me!')
-		welcome.grid(column = 1)
-
-
-	b = Button(root, text = 'Click Me!' , command = f)
-	b.grid(row = 3, column = 1)
-
-
-root.mainloop()
-
-Thread(target = window).start()
+#app = DACHAT()
 
 def checkData(data):
 
@@ -122,13 +76,6 @@ try:
 		myNickname = response['nickname']
 		print('Succesfully Connected as ' + myNickname + '!')
 		Thread(target = listenLoop, args = (client,)).start()
-		'''
-
-		if myNickname == 'Mike' :
-			toSend = 'DACHAT' + str(json.dumps({'type' : 'chat', 'target' : 'John', 'message' : 'KALHSPERA'}))
-			print(toSend)
-			client.send(bytes(toSend,'utf-8'))'''
-	
 	elif response['response'] == 'rejected' :
 		print(response['error'])
 		print('Client Closed conetion!')
